@@ -1,0 +1,26 @@
+{
+  "name": "postie-bot",
+  "description": "A Discord bot that does stuff",
+  "version": "2.5.0",
+  "main": "server.js",
+  "license": "ISC",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bufferutil": "^4.0.1",
+    "data-store": "^3.1.0",
+    "eris": "^0.9.0",
+    "erlpack": "^0.1.2",
+    "express": "^4.16.4",
+    "jsonfile": "^5.0.0",
+    "node-opus": "^0.3.1",
+    "opusscript": "0.0.6",
+    "path.join": "^1.0.0",
+    "request": "^2.88.0",
+    "uws": "^100.0.1"
+  },
+  "repository": {
+    "url": "https://github.com/Setherizor/Postie"
+  }
+}
