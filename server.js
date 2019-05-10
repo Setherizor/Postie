@@ -1,4 +1,6 @@
 // Runs our Website
+require('dotenv').config()
+
 require('./website')
 const jsonfile = require('jsonfile')
 const joinPath = require('path.join')

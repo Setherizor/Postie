@@ -1,2 +1,3 @@
 .Dockerfile.template
 node_modules
+.env
