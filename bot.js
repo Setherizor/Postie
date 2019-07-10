@@ -1,7 +1,7 @@
 const fs = require('fs')
 const Eris = require('eris') // Communicates with Discord
 const jsonfile = require('jsonfile')
-const joinPath = require('path.join')
+const joinPath = require('path').join
 
 // Sets Up database
 const Store = require('data-store')

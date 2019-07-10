@@ -14,7 +14,6 @@ bot.registerCommand(
     if (args[0]) {
       if (bot.store.hasOwn(`${msg.author.id}.${args[0]}`)) {
         let url = bot.store.get(`${msg.author.id}.${args[0]}`)
-        // let url = 'http://3.bp.blogspot.com/-FYjlw5lYV_Q/VCaXoNp-PTI/AAAAAAAAHmk/cLuCv4Ruq_U/s1600/37.jpg';
         let extension = url.split('.').reverse()[0]
         require('request')({ url, encoding: null }, (err, resp, buffer) => {
           if (err) {

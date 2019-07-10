@@ -33,7 +33,7 @@ bot.registerCommand('ping', 'Pong!', {
   reactionButtonTimeout: 60000 // After 60 seconds, the buttons won't work anymore
 })
 
-bot.registerCommand('g', (msg, args) => {
+bot.registerCommand('guild', (msg, args) => {
   console.log(bot.guilds.get('322149669335728159'))
 })
 
@@ -44,7 +44,7 @@ bot.registerCommand('db', (msg, args) => {
   )
 })
 
-bot.registerCommand('gr', (msg, args) => {
+bot.registerCommand('guildrole', (msg, args) => {
   console.log(
     bot.guilds.get('322149669335728159').roles.get('363519626602086411')
   )
