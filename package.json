@@ -1,7 +1,7 @@
 {
   "name": "postie-bot",
-  "description": "A Discord bot that does stuff",
-  "version": "2.6.1",
+  "description": "A Discord bot that does awesome stuff",
+  "version": "2.6.2",
   "main": "server.js",
   "license": "ISC",
   "scripts": {
