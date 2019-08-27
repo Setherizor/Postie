@@ -6,7 +6,7 @@ const jsonfile = require('jsonfile')
 const joinPath = require('path').join
 
 // ======= Bot Initalization ========
-const configFile = joinPath(__dirname, 'data', 'botState.json')
+const configFile = joinPath('/home/pi/postie/', 'data', 'botState.json')
 
 // Reads from file which has last known mode
 let mode

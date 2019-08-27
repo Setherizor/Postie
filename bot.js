@@ -5,7 +5,7 @@ const joinPath = require('path').join
 
 // Sets Up database
 const Store = require('data-store')
-const store = new Store({ name: 'postie-db', path: '/data/data.json' })
+const store = new Store({ name: 'postie-db', path: '/home/pi/postie/data/data.json' })
 
 let { mode, postieRole } = jsonfile.readFileSync(
   joinPath(__dirname, 'data/botState.json')
