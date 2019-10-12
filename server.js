@@ -1,28 +1,35 @@
 // Runs our Website
 require('dotenv').config()
 require('./website')
-
-const jsonfile = require('jsonfile')
+var jsonstore = require('jsonstore.io')
+let store = new jsonstore(process.env.JSONSTORE)
 const joinPath = require('path').join
 
 // ======= Bot Initalization ========
-const configFile = joinPath('/home/pi/postie/', 'data', 'botState.json')
+;(async () => {
+  // Option to reset the DB
+  if (process.argv[2] && process.argv[2] == 'delete') {
+    console.log(await store.delete(''))
+    return
+  }
 
-// Reads from file which has last known mode
-let mode
-try {
-  mode = jsonfile.readFileSync(configFile).mode
-} catch (err) {
-  jsonfile.writeFileSync(configFile, {
-    mode: 'default',
-    role: '466477351333789707'
-  })
-  mode = 'default'
-}
+  // Boot the bot
+  let mode
+  try {
+    mode = await store.read('config/mode')
+    if (!mode) {
+      mode = 'default'
+      console.log(await store.write('config/mode', mode))
+    }
+  } catch (err) {
+    console.log(err)
+  }
 
-const bot = require(joinPath(__dirname, '/modes/', mode)).bot
+  // Run the bot
+  const bot = require(joinPath(__dirname, '/modes/', mode)).bot
 
-bot.on('ready', () => console.log('Bot Ready!'))
+  bot.on('ready', () => console.log('Bot Ready!'))
 
-// Get the bot to connect to Discord
-bot.connect()
+  // Get the bot to connect to Discord
+  bot.connect()
+})()

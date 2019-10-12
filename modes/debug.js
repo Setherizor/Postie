@@ -37,10 +37,10 @@ bot.registerCommand('guild', (msg, args) => {
   console.log(bot.guilds.get('322149669335728159'))
 })
 
-bot.registerCommand('db', (msg, args) => {
+bot.registerCommand('db', async (msg, args) => {
   bot.createMessage(
     msg.channel.id,
-    'The store ```json' + bot.store.clone() + '```'
+    'The store ```json' + (await bot.store.read('')) + '```'
   )
 })
 

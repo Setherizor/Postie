@@ -1,15 +1,11 @@
 const fs = require('fs')
 const Eris = require('eris') // Communicates with Discord
-const jsonfile = require('jsonfile')
 const joinPath = require('path').join
 
-// Sets Up database
-const Store = require('data-store')
-const store = new Store({ name: 'postie-db', path: '/home/pi/postie/data/data.json' })
+var jsonstore = require('jsonstore.io')
+let store = new jsonstore(process.env.JSONSTORE)
 
-let { mode, postieRole } = jsonfile.readFileSync(
-  joinPath(__dirname, 'data/botState.json')
-)
+let ar = async s => await store.read(s)
 
 const getMode = m => require(joinPath(__dirname, '/modes/', m)).bot
 
@@ -72,12 +68,13 @@ bot.on('messageCreate', message => {
 // Changes Bot's Role
 bot.registerCommand(
   'role',
-  (msg, args) => {
+  async (msg, args) => {
+    let postieRole = await ar('config/postieRole')
     const guildID = msg.member.guild.id
     const oldColor = 12745742
 
     // Create Role
-    if (postieRole !== undefined) {
+    if (!postieRole) {
       bot
         .createRole(
           guildID,
@@ -117,7 +114,8 @@ bot.registerCommand(
                 console.log(error, 'Promise error')
               })
 
-            jsonfile.writeFileSync(f, { mode, role: botRole.id })
+            bot.store.write('config/postieRole', botRole.id)
+
             bot.createMessage(msg.channel.id, 'Made my own role :wink:')
           },
           err => console.log('Role creating went wrong', err)
@@ -155,13 +153,16 @@ bot.registerCommand(
 // Changes Bot's mode for differing active commands
 bot.registerCommand(
   'mode',
-  (msg, args) => {
+  async (msg, args) => {
+    let mode = await ar('config/mode')
     // If we have valid argument
     if (args[0] != undefined && Boolean(args[0].trim())) {
       // If its different from current mode and a valid mode
       if (args[0] !== mode && modes.includes(args[0])) {
         mode = args[0]
-        jsonfile.writeFileSync('data/botState.json', { mode, role: postieRole })
+
+        bot.store.write('config/mode', mode)
+
         bot = getMode(mode) // Change Mode
         bot.createMessage(
           msg.channel.id,
@@ -190,11 +191,14 @@ bot.registerCommand(
 // Changes Bot's mode for differing active commands
 bot.registerCommand(
   'default',
-  (msg, args) => {
+  async (msg, args) => {
+    let mode = await ar('config/mode')
     // If default different from current mode and a valid mode
     if ('default' !== mode && modes.includes(args[0])) {
       mode = 'default'
-      jsonfile.writeFileSync('data/botState.json', { mode, role: postieRole })
+
+      bot.store.write('config/mode', mode)
+
       bot = getMode(mode) // Change Mode
       bot.createMessage(
         msg.channel.id,

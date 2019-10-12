@@ -7,11 +7,11 @@ const app = express()
 // app.use(express.static('views'))
 
 // Favicon
-app.use(favicon(joinPath(__dirname, 'favicon.ico')))
+app.use(favicon(joinPath(__dirname, '/public/favicon.ico')))
 
 // http://expressjs.com/en/starter/basic-routing.html
 app.get('/', function (request, response) {
-  response.sendFile(joinPath(__dirname, '/index.html'))
+  response.sendFile(joinPath(__dirname, '/public/index.html'))
 })
 
 // listen for requests :)
