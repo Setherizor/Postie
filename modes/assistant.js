@@ -46,12 +46,7 @@ bot.registerCommand(
             '` successfully created! '
         )
         // Some Other Case
-      } else {
-        bot.createMessage(
-          msg.channel.id,
-          ':red_circle: You need to pass in a name and a url, or a name that has been entered :red_circle:'
-        )
-
+      } else if (args[0] == 'list') {
         let userObj = await bot.store.read(`recall/${msg.author.id}`)
         if (userObj && Object.keys(userObj).length === 0) {
           bot.createMessage(
