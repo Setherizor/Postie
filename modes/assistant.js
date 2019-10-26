@@ -48,10 +48,13 @@ bot.registerCommand(
         // Some Other Case
       } else if (args[0] == 'list') {
         let userObj = await bot.store.read(`recall/${msg.author.id}`)
-        if (userObj && Object.keys(userObj).length === 0) {
+        console.log(userObj)
+        if (userObj && Object.keys(userObj).length != 0) {
           bot.createMessage(
             msg.channel.id,
-            `:clipboard: Here is a list \n ${'```json\n' + userObj + '```'}`
+            `:clipboard: Here is a list \n ${'```json\n' +
+              Object.keys(userObj) +
+              '```'}`
           )
         }
       }

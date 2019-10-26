@@ -9,8 +9,9 @@
     "format": "npx prettier-standard ./* ./modes/* './public/*'"
   },
   "dependencies": {
-    "dotenv": "^8.1.0",
-    "eris": "^0.10.1",
+    "async-jsonstore-io": "^3.0.1",
+    "dotenv": "^8.2.0",
+    "eris": "^0.11.0",
     "express": "^4.17.1",
     "jsonstore.io": "^1.1.0",
     "request": "^2.88.0",

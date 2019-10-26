@@ -1,35 +1,40 @@
 // Runs our Website
 require('dotenv').config()
-require('./website')
-var jsonstore = require('jsonstore.io')
-let store = new jsonstore(process.env.JSONSTORE)
+// require('./website')
 const joinPath = require('path').join
 
-// ======= Bot Initalization ========
-;(async () => {
-  // Option to reset the DB
-  if (process.argv[2] && process.argv[2] == 'delete') {
-    console.log(await store.delete(''))
-    return
-  }
+// var jsonstore = require("jsonstore.io");
+const JsonStoreClient = require('async-jsonstore-io')
 
-  // Boot the bot
+let store = new JsonStoreClient(process.env.JSONSTORE)
+
+// ======= Bot Initalization ========
+async function lit () {
   let mode
   try {
-    mode = await store.read('config/mode')
+    if (process.argv[2] && process.argv[2] == 'delete') {
+      console.log(await store.delete(''))
+      return
+    }
+    mode = await store.get('config/mode')
+    console.log(Boolean(mode))
     if (!mode) {
       mode = 'default'
       console.log(await store.write('config/mode', mode))
     }
-  } catch (err) {
-    console.log(err)
+  } catch (e) {
+    if (e.name == 'Nothing Found Error.') {
+      store.send('config/mode', 'default')
+      console.log('default state written')
+    }
+    console.error(e)
   }
 
   // Run the bot
   const bot = require(joinPath(__dirname, '/modes/', mode)).bot
-
   bot.on('ready', () => console.log('Bot Ready!'))
-
   // Get the bot to connect to Discord
   bot.connect()
-})()
+}
+
+lit()
