@@ -1,40 +1,43 @@
 // Runs our Website
 require('dotenv').config()
-// require('./website')
+require('./website')
 const joinPath = require('path').join
+const debug = require('debug')('postie:start')
 
-// var jsonstore = require("jsonstore.io");
 const JsonStoreClient = require('async-jsonstore-io')
 
 let store = new JsonStoreClient(process.env.JSONSTORE)
 
 // ======= Bot Initalization ========
-async function lit () {
+async function run () {
   let mode
   try {
+    // Manual Delete
     if (process.argv[2] && process.argv[2] == 'delete') {
-      console.log(await store.delete(''))
+      debug('delete', await store.delete(''))
       return
     }
     mode = await store.get('config/mode')
-    console.log(Boolean(mode))
     if (!mode) {
       mode = 'default'
-      console.log(await store.write('config/mode', mode))
+      debug('write mode: ', await store.write('config/mode', mode))
     }
   } catch (e) {
     if (e.name == 'Nothing Found Error.') {
       store.send('config/mode', 'default')
-      console.log('default state written')
+      debug('wrote default mode')
     }
-    console.error(e)
+    debug('ERROR', e)
   }
+
+  // Second mode issue check
+  if (!mode) mode = 'default'
 
   // Run the bot
   const bot = require(joinPath(__dirname, '/modes/', mode)).bot
-  bot.on('ready', () => console.log('Bot Ready!'))
+  bot.on('ready', () => debug('Postie is active'))
   // Get the bot to connect to Discord
   bot.connect()
 }
 
-lit()
+run()

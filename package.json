@@ -5,19 +5,25 @@
   "main": "server.js",
   "license": "ISC",
   "scripts": {
-    "start": "node server.js",
+    "start": "DEBUG_DEPTH=1 DEBUG=postie:* npm run run",
+    "run": "node server.js",
     "format": "npx prettier-standard ./* ./modes/* './public/*'"
   },
   "dependencies": {
     "async-jsonstore-io": "^3.0.1",
+    "debug": "^4.1.1",
     "dotenv": "^8.2.0",
     "eris": "^0.11.0",
     "express": "^4.17.1",
     "jsonstore.io": "^1.1.0",
     "request": "^2.88.0",
-    "serve-favicon": "^2.5.0"
+    "serve-favicon": "^2.5.0",
+    "supports-color": "^7.1.0"
   },
   "repository": {
     "url": "https://github.com/Setherizor/Postie"
+  },
+  "devDependencies": {
+    "prettier-standard": "^16.2.1"
   }
 }

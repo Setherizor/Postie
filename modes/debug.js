@@ -1,6 +1,7 @@
 const bot = require('../bot')
 
-console.log('Debug Mode Ready!')
+const debug = require('debug')('postie:module')
+debug('Debug Mode Ready!')
 
 // ===== Debug Commands =====
 bot.registerCommand('ping', 'Pong!', {
@@ -34,7 +35,7 @@ bot.registerCommand('ping', 'Pong!', {
 })
 
 bot.registerCommand('guild', (msg, args) => {
-  console.log(bot.guilds.get('322149669335728159'))
+  bot.createMessage(msg.channel.id, bot.guilds.get('322149669335728159'))
 })
 
 bot.registerCommand('db', async (msg, args) => {
@@ -45,16 +46,18 @@ bot.registerCommand('db', async (msg, args) => {
 })
 
 bot.registerCommand('guildrole', (msg, args) => {
-  console.log(
+  bot.createMessage(
+    msg.channel.id,
     bot.guilds.get('322149669335728159').roles.get('363519626602086411')
   )
 })
 
-bot.registerCommand('d', (msg, args) => {
-  if (args[0] !== undefined) {
-    console.log(eval(`bot.${args[0]}`))
-  }
-  console.log(bot)
-})
+// Dangerous Only dev checking
+// bot.registerCommand('d', (msg, args) => {
+//   if (args[0] !== undefined) {
+//     debug(eval(`bot.${args[0]}`))
+//   }
+//   debug(bot)
+// })
 
 module.exports = { bot: bot, desc: 'used for debugging the bots functionality' }

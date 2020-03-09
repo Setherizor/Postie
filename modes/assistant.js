@@ -1,6 +1,7 @@
 const bot = require('../bot')
+const debug = require('debug')('postie:module')
 
-console.log('Assistant Mode Ready!')
+debug('Assistant Mode Ready!')
 
 bot.registerCommand('aa', (msg, args) => {
   bot.createMessage(msg.channel.id, 'I am an Assistant for you :smiley:')
@@ -14,8 +15,7 @@ bot.registerCommand(
       let result = await bot.store.read(
         `recall/${msg.author.id.toString()}/${args[0]}`
       )
-
-      console.log(result)
+      debug('Recall Result:', result)
       // If we have something stored
       if (result) {
         let extension = result.split('.').reverse()[0]
@@ -23,7 +23,7 @@ bot.registerCommand(
           { uri: result, encoding: null },
           (err, resp, buffer) => {
             if (err) {
-              console.log('issue with request', err)
+              debug('ERROR - issue with request', err)
               return
             }
             bot.createMessage(
@@ -48,7 +48,7 @@ bot.registerCommand(
         // Some Other Case
       } else if (args[0] == 'list') {
         let userObj = await bot.store.read(`recall/${msg.author.id}`)
-        console.log(userObj)
+        // debug(userObj) // could output if want to
         if (userObj && Object.keys(userObj).length != 0) {
           bot.createMessage(
             msg.channel.id,

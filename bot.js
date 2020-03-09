@@ -1,6 +1,7 @@
 const fs = require('fs')
 const Eris = require('eris') // Communicates with Discord
 const joinPath = require('path').join
+const debug = require('debug')('postie:setup')
 
 var jsonstore = require('jsonstore.io')
 let store = new jsonstore(process.env.JSONSTORE)
@@ -86,11 +87,11 @@ bot.registerCommand(
           'For Postie to Enjoy'
         )
         .catch(e => {
-          console.log(e)
+          debug('ERROR', e)
         })
         .then(
           botRole => {
-            console.log(botRole.id)
+            debug('Role ID:', botRole.id)
 
             // Add Bot to Role
             bot.addGuildMemberRole(
@@ -110,18 +111,18 @@ bot.registerCommand(
                 },
                 'Bot Init Role Creation'
               )
-              .catch(error => {
-                console.log(error, 'Promise error')
+              .catch(e => {
+                debug('ERROR (promise)', e)
               })
 
             bot.store.write('config/postieRole', botRole.id)
 
             bot.createMessage(msg.channel.id, 'Made my own role :wink:')
           },
-          err => console.log('Role creating went wrong', err)
+          err => debug('ERROR - Role creating went wrong', err)
         )
     } else {
-      console.log(bot.guilds.get(guildID).roles.get(postieRole))
+      debug('Guild ID Role:', bot.guilds.get(guildID).roles.get(postieRole))
     }
   },
   {
@@ -177,9 +178,7 @@ bot.registerCommand(
     }
     bot.createMessage(
       msg.channel.id,
-      `The bot is currently in **${mode}** mode, type \`${
-        process.env.COMMAND_PREFIX
-      }help\` to learn more`
+      `The bot is currently in **${mode}** mode, type \`${process.env.COMMAND_PREFIX}help\` to learn more`
     )
   },
   {
@@ -212,9 +211,7 @@ bot.registerCommand(
     }
     bot.createMessage(
       msg.channel.id,
-      `The bot is currently in **${mode}** mode, type \`${
-        process.env.COMMAND_PREFIX
-      }help\` to learn more`
+      `The bot is currently in **${mode}** mode, type \`${process.env.COMMAND_PREFIX}help\` to learn more`
     )
   },
   {

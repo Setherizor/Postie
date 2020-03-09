@@ -1,13 +1,14 @@
 const request = require('request') // Enables HTTP Requests
 const bot = require('../bot')
 
-console.log('Default Mode Ready!')
+const debug = require('debug')('postie:module')
+debug('Default Mode Ready!')
 
 // Request Function
 const post = (payload, url, callback) => {
   request.post(url, { json: { body: payload } }, (error, response, body) => {
     if (!error && response.statusCode === 200) {
-      console.log(body)
+      debug('Post Response:', body)
       callback(body)
     }
   })
@@ -39,18 +40,18 @@ bot.registerCommand(
     channel
       .join()
       .then(connection => {
-        console.log('Connected to voice channel!')
+        debug('Connected to voice channel!')
         connection.volume = 100
         // const dispatcher =
         connection.play(
           'https://cdn.glitch.com/9dd5ac6b-827a-4403-85d1-9ce1cc6ee750%2Fand-his-name-is-john-cena-1.mp3?1535563563167'
         )
         connection.on('end', function (end) {
-          console.log('Leaving voice channel')
+          debug('Leaving voice channel')
           channel.leave()
         })
       })
-      .catch(console.error)
+      .catch(e => debug('ERROR', e))
   },
   {
     description: 'hi from the dev server',
