@@ -15,7 +15,7 @@ bot.registerCommand(
       let result = await bot.store.read(
         `recall/${msg.author.id.toString()}/${args[0]}`
       )
-      debug('Recall Result:', result)
+      debug('recall result:', result)
       // If we have something stored
       if (result) {
         let extension = result.split('.').reverse()[0]
@@ -23,7 +23,7 @@ bot.registerCommand(
           { uri: result, encoding: null },
           (err, resp, buffer) => {
             if (err) {
-              debug('ERROR - issue with request', err)
+              debug('issue with post request', err)
               return
             }
             bot.createMessage(

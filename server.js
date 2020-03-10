@@ -14,7 +14,7 @@ async function run () {
   try {
     // Manual Delete
     if (process.argv[2] && process.argv[2] == 'delete') {
-      debug('delete', await store.delete(''))
+      debug('manual delete', await store.delete(''))
       return
     }
     mode = await store.get('config/mode')
@@ -27,7 +27,7 @@ async function run () {
       store.send('config/mode', 'default')
       debug('wrote default mode')
     }
-    debug('ERROR', e)
+    debug('config Setup issue', e)
   }
 
   // Second mode issue check

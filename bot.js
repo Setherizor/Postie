@@ -87,11 +87,11 @@ bot.registerCommand(
           'For Postie to Enjoy'
         )
         .catch(e => {
-          debug('ERROR', e)
+          debug('role creation issue', e)
         })
         .then(
           botRole => {
-            debug('Role ID:', botRole.id)
+            debug('role ID:', botRole.id)
 
             // Add Bot to Role
             bot.addGuildMemberRole(
@@ -112,17 +112,17 @@ bot.registerCommand(
                 'Bot Init Role Creation'
               )
               .catch(e => {
-                debug('ERROR (promise)', e)
+                debug('role creation error', e)
               })
 
             bot.store.write('config/postieRole', botRole.id)
 
             bot.createMessage(msg.channel.id, 'Made my own role :wink:')
           },
-          err => debug('ERROR - Role creating went wrong', err)
+          err => debug('role creation error', err)
         )
     } else {
-      debug('Guild ID Role:', bot.guilds.get(guildID).roles.get(postieRole))
+      debug('guild ID role:', bot.guilds.get(guildID).roles.get(postieRole))
     }
   },
   {

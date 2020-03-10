@@ -8,7 +8,7 @@ debug('Default Mode Ready!')
 const post = (payload, url, callback) => {
   request.post(url, { json: { body: payload } }, (error, response, body) => {
     if (!error && response.statusCode === 200) {
-      debug('Post Response:', body)
+      debug('post response:', body)
       callback(body)
     }
   })
@@ -40,18 +40,18 @@ bot.registerCommand(
     channel
       .join()
       .then(connection => {
-        debug('Connected to voice channel!')
+        debug('connected to voice channel')
         connection.volume = 100
         // const dispatcher =
         connection.play(
           'https://cdn.glitch.com/9dd5ac6b-827a-4403-85d1-9ce1cc6ee750%2Fand-his-name-is-john-cena-1.mp3?1535563563167'
         )
         connection.on('end', function (end) {
-          debug('Leaving voice channel')
+          debug('leaving voice channel')
           channel.leave()
         })
       })
-      .catch(e => debug('ERROR', e))
+      .catch(e => debug('audio playback error', e))
   },
   {
     description: 'hi from the dev server',
