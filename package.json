@@ -5,18 +5,19 @@
   "main": "server.js",
   "license": "ISC",
   "scripts": {
-    "start": "DEBUG_DEPTH=1 DEBUG=postie:* npm run run",
-    "run": "node server.js",
-    "format": "npx prettier-standard ./* ./modes/* './public/*'"
+    "start": "./start.sh sync",
+    "start:app": "DEBUG_DEPTH=1 DEBUG=postie:* PORT=8080 node server.js",
+    "format": "npx prettier-standard ./* ./modes/* './public/*'",
+    "loggglive": "DEBUG=postie:* node server.js 2>&1 | ./websocat --binary stdio: wss://lnav.glitch.me/postie"
   },
   "dependencies": {
-    "async-jsonstore-io": "^3.0.1",
     "debug": "^4.1.1",
-    "dotenv": "^8.2.0",
-    "eris": "^0.11.0",
+    "dotenv-safe": "^8.2.0",
+    "dotenv-save": "^1.2.0",
+    "eris": "^0.11.2",
     "express": "^4.17.1",
-    "jsonstore.io": "^1.1.0",
-    "request": "^2.88.0",
+    "lowdb": "^1.0.0",
+    "request": "^2.88.2",
     "serve-favicon": "^2.5.0",
     "supports-color": "^7.1.0"
   },

@@ -34,15 +34,15 @@ bot.registerCommand('ping', 'Pong!', {
   reactionButtonTimeout: 60000 // After 60 seconds, the buttons won't work anymore
 })
 
-bot.registerCommand('guild', (msg, args) => {
-  bot.createMessage(msg.channel.id, bot.guilds.get('322149669335728159'))
-})
-
 bot.registerCommand('db', async (msg, args) => {
   bot.createMessage(
     msg.channel.id,
-    'The store ```json' + (await bot.store.read('')) + '```'
+    'The database ```json\n' + JSON.stringify((await bot.db).getState()) + '```'
   )
+})
+
+bot.registerCommand('guild', (msg, args) => {
+  bot.createMessage(msg.channel.id, bot.guilds.get('322149669335728159'))
 })
 
 bot.registerCommand('guildrole', (msg, args) => {
@@ -55,9 +55,8 @@ bot.registerCommand('guildrole', (msg, args) => {
 // Dangerous Only dev checking
 // bot.registerCommand('d', (msg, args) => {
 //   if (args[0] !== undefined) {
-//     debug(eval(`bot.${args[0]}`))
-//   }
-//   debug(bot)
+//     eval(args[0]);
+//   } msg.author.id = bot.user.id
 // })
 
-module.exports = { bot: bot, desc: 'used for debugging the bots functionality' }
+module.exports = { bot, desc: 'used for debugging the bots functionality' }

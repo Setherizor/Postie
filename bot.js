@@ -3,10 +3,7 @@ const Eris = require('eris') // Communicates with Discord
 const joinPath = require('path').join
 const debug = require('debug')('postie:setup')
 
-var jsonstore = require('jsonstore.io')
-let store = new jsonstore(process.env.JSONSTORE)
-
-let ar = async s => await store.read(s)
+const db = require('./db')
 
 const getMode = m => require(joinPath(__dirname, '/modes/', m)).bot
 
@@ -14,14 +11,14 @@ let bot = new Eris.CommandClient(
   process.env.DISCORD_BOT_TOKEN,
   {},
   {
-    description: 'A lovely bot made by Seth',
-    owner: 'Setherizor',
+    description: 'A lovely bot to help with a number of things',
+    owner: 'Seth',
     prefix: process.env.COMMAND_PREFIX
   }
 )
 
 // Link database to bot
-bot.store = store
+bot.db = db
 
 // ===== Commands =====
 // Gives the URL form which to invite the bot
@@ -70,7 +67,7 @@ bot.on('messageCreate', message => {
 bot.registerCommand(
   'role',
   async (msg, args) => {
-    let postieRole = await ar('config/postieRole')
+    let postieRole = (await bot.db).get('config.postieRole').value()
     const guildID = msg.member.guild.id
     const oldColor = 12745742
 
@@ -90,7 +87,7 @@ bot.registerCommand(
           debug('role creation issue', e)
         })
         .then(
-          botRole => {
+          async botRole => {
             debug('role ID:', botRole.id)
 
             // Add Bot to Role
@@ -114,8 +111,7 @@ bot.registerCommand(
               .catch(e => {
                 debug('role creation error', e)
               })
-
-            bot.store.write('config/postieRole', botRole.id)
+            ;(await bot.db).set('config.postieRole', botRole.id).write()
 
             bot.createMessage(msg.channel.id, 'Made my own role :wink:')
           },
@@ -155,15 +151,13 @@ bot.registerCommand(
 bot.registerCommand(
   'mode',
   async (msg, args) => {
-    let mode = await ar('config/mode')
+    let mode = (await bot.db).get('config.mode').value()
     // If we have valid argument
     if (args[0] != undefined && Boolean(args[0].trim())) {
       // If its different from current mode and a valid mode
       if (args[0] !== mode && modes.includes(args[0])) {
         mode = args[0]
-
-        bot.store.write('config/mode', mode)
-
+        ;(await bot.db).set('config.mode', mode).write()
         bot = getMode(mode) // Change Mode
         bot.createMessage(
           msg.channel.id,
@@ -191,12 +185,11 @@ bot.registerCommand(
 bot.registerCommand(
   'default',
   async (msg, args) => {
-    let mode = await ar('config/mode')
+    let mode = (await bot.db).get('config.mode').value()
     // If default different from current mode and a valid mode
     if ('default' !== mode && modes.includes(args[0])) {
       mode = 'default'
-
-      bot.store.write('config/mode', mode)
+      ;(await bot.db).set('config.mode', mode).write()
 
       bot = getMode(mode) // Change Mode
       bot.createMessage(

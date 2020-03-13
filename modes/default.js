@@ -54,9 +54,9 @@ bot.registerCommand(
       .catch(e => debug('audio playback error', e))
   },
   {
-    description: 'hi from the dev server',
+    description: 'play some audio',
     fullDescription:
-      'Should not be seeing this. do ahead and ```@Setherizor``` if you can... :check:'
+      'Should attempt to play some funny audio. Does not always work :smile:'
   }
 )
 
@@ -72,7 +72,7 @@ bot.registerCommand(
   },
   {
     description: 'leaves voice channel',
-    fullDescription: 'goodbye to currewnt voice channel'
+    fullDescription: 'goodbye to current voice channel'
   }
 )
 
@@ -80,11 +80,11 @@ bot.registerCommand(
   'clean',
   (msg, args) => {
     bot.createMessage(msg.channel.id, '**Cleaning up my messages :smiley:**')
-
-    msg.channel.messages.map(m => {
-      m.edit('deleting...')
-      m.delete('k')
-    })
+    let toDelete = msg.channel.messages.filter(m => m.author.id == bot.user.id)
+    debug(`deleting ${toDelete.length} messages`)
+    toDelete.forEach(m =>
+      bot.deleteMessage(m.channel.id, m.id, 'cleaning bot messages')
+    )
   },
   {
     description: 'bot cleaning',
@@ -92,4 +92,4 @@ bot.registerCommand(
   }
 )
 
-module.exports = { bot: bot, desc: 'default mode with normal functions' }
+module.exports = { bot, desc: 'default mode with normal functions' }
