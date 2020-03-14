@@ -6,14 +6,12 @@
   "license": "ISC",
   "scripts": {
     "start": "./start.sh sync",
-    "start:app": "DEBUG_DEPTH=1 DEBUG=postie:* PORT=8080 node server.js",
-    "format": "npx prettier-standard ./* ./modes/* './public/*'",
-    "loggglive": "DEBUG=postie:* node server.js 2>&1 | ./websocat --binary stdio: wss://lnav.glitch.me/postie"
+    "start:app": "DEBUG_DEPTH=1 DEBUG=postie:* PORT=8080 node -r dotenv-safe/config server.js",
+    "format": "npx prettier-standard ./* ./modes/* './public/*'"
   },
   "dependencies": {
     "debug": "^4.1.1",
     "dotenv-safe": "^8.2.0",
-    "dotenv-save": "^1.2.0",
     "eris": "^0.11.2",
     "express": "^4.17.1",
     "lowdb": "^1.0.0",

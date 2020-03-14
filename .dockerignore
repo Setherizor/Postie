@@ -1,3 +1,16 @@
+# Git
+.git
+.gitignore
+
+# Docker configuration
+Dockerfile
+Makefile
+docker-compose.yml
+
 #ignore the imgs for docs
 /img/
-node_modules/
+node_modules
+.env
+.vscode
+bin
+data

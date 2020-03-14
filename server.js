@@ -1,5 +1,4 @@
 // Runs our Website
-require('dotenv-safe').config()
 require('./website')
 const joinPath = require('path').join
 const debug = require('debug')('postie:start')
