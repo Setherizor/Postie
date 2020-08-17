@@ -15,7 +15,7 @@
   "dependencies": {
     "debug": "^4.1.1",
     "dotenv-safe": "^8.2.0",
-    "eris": "^0.11.2",
+    "eris": "^0.13.3",
     "express": "^4.17.1",
     "lowdb": "^1.0.0",
     "request": "^2.88.2",
@@ -23,6 +23,6 @@
     "supports-color": "^7.1.0"
   },
   "devDependencies": {
-    "prettier-standard": "^16.2.1"
+    "prettier-standard": "^16.4.1"
   }
 }

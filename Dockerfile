@@ -1,19 +1,43 @@
-FROM node:latest
+# Multi Stage build to get us up and running with the frontend!
+# Based on - https://medium.com/hackernoon/a-tale-of-two-docker-multi-stage-build-layers-85348a409c84
 
-# Defines our working directory in container
+ARG NODE_VERSION=14-alpine
+
+FROM node:${NODE_VERSION} AS build
+
+RUN apk --update --no-cache add --virtual native-deps \
+  g++ gcc libgcc libstdc++ linux-headers make python
+
+WORKDIR /src
+COPY package* ./
+RUN npm ci
+
+# Prune out packages and dependencies
+RUN npm prune --production && apk del native-deps
+
+# Next Layer!
+FROM node:${NODE_VERSION}
+
+# Create app directory
 WORKDIR /usr/src/app
 
-# Copies the package.json first for better cache on later pushes
-COPY package.json package.json
-# Get dependencies
-RUN JOBS=MAX npm install --production --unsafe-perm && npm cache verify && rm -rf /tmp/*
+# Install running deps and get files
+COPY --from=build /src/node_modules node_modules
+COPY --from=build /src/package* ./
 
 # This will copy all files in our root to the working  directory in the container
 # Our precious bot needs to move to the working directory
 COPY . ./
+# COPY .env ./
 
+HEALTHCHECK --interval=5s \
+  --timeout=5s \
+  --retries=6 \
+  CMD curl -fs http://localhost:8080/ || exit 1
+
+# Create Port Mappings for website
+ENV PORT 8080
 EXPOSE 8080
 
-# server.js will run when container starts up on the device
-# CMD ["npm", "start"]
+# Image default start strategy
 CMD ["npm", "run", "start:app", "--silent"]
