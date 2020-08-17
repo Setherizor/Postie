@@ -18,6 +18,9 @@ RUN npm prune --production && apk del native-deps
 # Next Layer!
 FROM node:${NODE_VERSION}
 
+# Get curl and bash for healthcheck / waitfor script
+RUN apk add --no-cache curl
+
 # Create app directory
 WORKDIR /usr/src/app
 
@@ -33,7 +36,7 @@ COPY . ./
 HEALTHCHECK --interval=5s \
   --timeout=5s \
   --retries=6 \
-  CMD curl -fs http://localhost:8080/ || exit 1
+  CMD curl -fsI http://localhost:8080/ || exit 1
 
 # Create Port Mappings for website
 ENV PORT 8080
