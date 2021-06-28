@@ -1,14 +1,18 @@
-const express = require('express')
-const favicon = require('serve-favicon')
-const joinPath = require('path').join
+import express from 'express'
+import favicon from 'serve-favicon'
+import { join } from 'path'
+import { dirname } from 'path'
+import { fileURLToPath } from 'url'
+import Debug from 'debug'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+const debug = Debug('postie:http')
 const app = express()
-const debug = require('debug')('postie:http')
 
-// http://expressjs.com/en/starter/static-files.html
-// app.use(express.static('views'))
-
-// Favicon
-app.use(favicon(joinPath(__dirname, '/public/favicon.ico')))
+// Favicon & Static Files
+app.use(favicon(join(__dirname, '/public/favicon.ico')))
+app.use(express.static(join(__dirname, 'public')))
 
 // Log http requests to the invite site
 function logReq (request, status) {
@@ -17,12 +21,6 @@ function logReq (request, status) {
     request.headers['x-forwarded-for'] || request.connection.remoteAddress
   debug(ip, ' - ', `"${method} ${url} HTTP/${httpVersion}" ${status}`)
 }
-
-// Serve main page
-app.get('/', function (request, response) {
-  logReq(request, response.statusCode)
-  response.sendFile(joinPath(__dirname, '/public/index.html'))
-})
 
 // Wildcard handler
 app.get('*', function (request, response) {
@@ -36,3 +34,4 @@ let listener = app.listen(process.env.PORT, function () {
 })
 
 // We don't need any exports since everything is handled here
+export default {}

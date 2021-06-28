@@ -1,62 +1,88 @@
-const bot = require('../bot')
+import Debug from 'debug'
+const debug = Debug('postie:module')
 
-const debug = require('debug')('postie:module')
-debug('Debug Mode Ready!')
+function enable (bot) {
+  debug('Debug Mode Ready!')
 
-// ===== Debug Commands =====
-bot.registerCommand('ping', 'Pong!', {
-  description: 'Pong!',
-  fullDescription:
-    "This command could be used to check if the bot is up. Or entertainment when you're bored.",
-  reactionButtons: [
-    // Add reaction buttons to the command
-    {
-      emoji: '⬅',
-      type: 'edit',
-      response: msg => {
-        // Reverse the message content
-        return msg.content
-          .split()
-          .reverse()
-          .join()
+  // ===== Debug Commands =====
+  bot.registerCommand('ping', 'Pong!', {
+    description: 'Pong!',
+    fullDescription:
+      "This command could be used to check if the bot is up. Or entertainment when you're bored.",
+    reactionButtons: [
+      // Add reaction buttons to the command
+      {
+        emoji: '⬅',
+        type: 'edit',
+        response: msg => {
+          // Reverse the message content
+          return msg.content
+            .split()
+            .reverse()
+            .join()
+        }
+      },
+      {
+        emoji: '🔁',
+        type: 'edit', // Pick a new pong variation
+        response: ['Pang!', 'Peng!', 'Ping!', 'Pong!', 'Pung!']
+      },
+      {
+        emoji: '⏹',
+        type: 'cancel' // Stop listening for reactions
       }
+    ],
+    reactionButtonTimeout: 60000 // After 60 seconds, the buttons won't work anymore
+  })
+
+  bot.registerCommand(
+    'db',
+    async (msg, args) => {
+      await bot.db.read()
+      bot.createMessage(
+        msg.channel.id,
+        'The database ```json\n' + JSON.stringify(bot.db.data) + '```'
+      )
     },
     {
-      emoji: '🔁',
-      type: 'edit', // Pick a new pong variation
-      response: ['Pang!', 'Peng!', 'Ping!', 'Pong!', 'Pung!']
-    },
-    {
-      emoji: '⏹',
-      type: 'cancel' // Stop listening for reactions
+      deleteCommand: true
     }
-  ],
-  reactionButtonTimeout: 60000 // After 60 seconds, the buttons won't work anymore
-})
-
-bot.registerCommand('db', async (msg, args) => {
-  bot.createMessage(
-    msg.channel.id,
-    'The database ```json\n' + JSON.stringify((await bot.db).getState()) + '```'
   )
-})
 
-bot.registerCommand('guild', (msg, args) => {
-  bot.createMessage(msg.channel.id, bot.guilds.get('322149669335728159'))
-})
-
-bot.registerCommand('guildrole', (msg, args) => {
-  bot.createMessage(
-    msg.channel.id,
-    bot.guilds.get('322149669335728159').roles.get('363519626602086411')
+  bot.registerCommand(
+    'delete',
+    async (msg, args) => {
+      if (args[0] == undefined) {
+        bot.tmpResponse(msg, '**Nothing to delete**', 2000)
+      }
+      bot.tmpResponse(msg, '**Deleting single message: ' + args[0] + '**', 2000)
+      bot.deleteMessage(msg.channel.id, args[0], 'cleaning single message')
+    },
+    {
+      description: 'deletes single message',
+      fullDescription: 'deletes single message with id',
+      deleteCommand: true
+    }
   )
-})
 
-// Dangerous Only dev checking
-// bot.registerCommand('d', (msg, args) => {
-//   if (args[0] !== undefined) {
-//     eval(args[0]);
-//   } msg.author.id = bot.user.id
-// })
+  // Dangerous Only dev checking
+  // TODO: DISABLE THIS ASAP
+  // bot.registerCommand('d', (msg, args) => {
+  //   if (args[0] !== undefined) {
+  //     eval(args[0])
+  //   }
+  //   msg.author.id = bot.user.id
+  // })
+}
+function disable (bot) {
+  bot.unregisterCommand('ping')
+  bot.unregisterCommand('db')
+  bot.unregisterCommand('delete')
+  // bot.unregisterCommand('d')
+}
 
-module.exports = { bot, desc: 'used for debugging the bots functionality' }
+export default {
+  enable,
+  disable,
+  desc: 'used for debugging the bots functionality'
+}

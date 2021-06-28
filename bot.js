@@ -1,11 +1,10 @@
-const fs = require('fs')
-const Eris = require('eris') // Communicates with Discord
-const joinPath = require('path').join
-const debug = require('debug')('postie:setup')
-
-const db = require('./db')
-
-const getMode = m => require(joinPath(__dirname, '/modes/', m)).bot
+import fs from 'fs'
+import * as Eris from 'eris'
+import { join } from 'path'
+import botModes from './modes/index.js'
+import db from './db.js'
+import Debug from 'debug'
+const debug = Debug('postie:setup')
 
 let bot = new Eris.CommandClient(
   process.env.DISCORD_BOT_TOKEN,
@@ -17,8 +16,19 @@ let bot = new Eris.CommandClient(
   }
 )
 
-// Link database to bot
+// ===== Database & Helper Methods =====
 bot.db = db
+
+bot.tmpResponse = async (originalmsg, text, timeout = 5000) => {
+  var channel = originalmsg.channel.id
+  var tmpMsgId = (await bot.createMessage(channel, text)).id
+
+  setTimeout(
+    () =>
+      bot.deleteMessage(channel, tmpMsgId, 'cleaning temporary bot message'),
+    timeout
+  )
+}
 
 // ===== Commands =====
 // Gives the URL form which to invite the bot
@@ -67,7 +77,8 @@ bot.on('messageCreate', message => {
 bot.registerCommand(
   'role',
   async (msg, args) => {
-    let postieRole = (await bot.db).get('config.postieRole').value()
+    await bot.db.read()
+    let postieRole = bot.dbconfig.postieRole
     const guildID = msg.member.guild.id
     const oldColor = 12745742
 
@@ -111,7 +122,8 @@ bot.registerCommand(
               .catch(e => {
                 debug('role creation error', e)
               })
-            ;(await bot.db).set('config.postieRole', botRole.id).write()
+            bot.db.data.config.postieRole = botRole.id
+            await bot.db.write()
 
             bot.createMessage(msg.channel.id, 'Made my own role :wink:')
           },
@@ -135,15 +147,16 @@ const modes = fs
 bot.registerCommand(
   'modes',
   (msg, args) => {
-    bot.createMessage(
-      msg.channel.id,
-      'Avaliable Modes :smiley:\n' +
-        modes.map(m => `**${m}** - ${require('./modes/' + m).desc}`).join('\n')
+    bot.tmpResponse(
+      msg,
+      'Avaliable Modes :smiley:\n' + botModes.descriptions(),
+      10000
     )
   },
   {
     description: 'lists modes',
-    fullDescription: 'Lists avaliable modes for bot'
+    fullDescription: 'Lists avaliable modes for bot',
+    deleteCommand: true
   }
 )
 
@@ -151,67 +164,75 @@ bot.registerCommand(
 bot.registerCommand(
   'mode',
   async (msg, args) => {
-    let mode = (await bot.db).get('config.mode').value()
+    await bot.db.read()
+    let oldmode = bot.db.data.config.mode
     // If we have valid argument
     if (args[0] != undefined && Boolean(args[0].trim())) {
-      // If its different from current mode and a valid mode
-      if (args[0] !== mode && modes.includes(args[0])) {
-        mode = args[0]
-        ;(await bot.db).set('config.mode', mode).write()
-        bot = getMode(mode) // Change Mode
-        bot.createMessage(
-          msg.channel.id,
-          `**${args[0] || 'Default'}** Mode Enabled :smiley:`
+      // If its different from oldmode and a valid mode
+      if (args[0] !== oldmode && botModes.valid(args[0])) {
+        botModes.setup(bot, args[0], oldmode)
+        bot.db.data.config.mode = args[0]
+        await bot.db.write()
+        bot.tmpResponse(
+          msg,
+          `**${args[0] || 'Default'}** Mode Enabled :smiley:`,
+          5000
         )
       } else {
-        return bot.createMessage(
-          msg.channel.id,
-          `**${args[0]}** is not a vald Mode :frowning:`
+        bot.tmpResponse(
+          msg,
+          `**${args[0]}** is not a valid Mode :frowning:`,
+          5000
         )
       }
+      return
     }
-    bot.createMessage(
-      msg.channel.id,
-      `The bot is currently in **${mode}** mode, type \`${process.env.COMMAND_PREFIX}help\` to learn more`
+    bot.tmpResponse(
+      msg,
+      `The bot is currently in **${mode}** mode, type \`${
+        process.env.COMMAND_PREFIX
+      }help\` to learn more`,
+      5000
     )
   },
   {
     description: 'sets mode',
-    fullDescription: "Changes bot's mode"
+    fullDescription: "Changes bot's mode",
+    deleteCommand: true
   }
 )
 
-// Changes Bot's mode for differing active commands
 bot.registerCommand(
-  'default',
+  'clean',
   async (msg, args) => {
-    let mode = (await bot.db).get('config.mode').value()
-    // If default different from current mode and a valid mode
-    if ('default' !== mode && modes.includes(args[0])) {
-      mode = 'default'
-      ;(await bot.db).set('config.mode', mode).write()
-
-      bot = getMode(mode) // Change Mode
-      bot.createMessage(
-        msg.channel.id,
-        `**${args[0] || 'Default'}** Mode Enabled :smiley:`
-      )
-    } else {
-      return bot.createMessage(
-        msg.channel.id,
-        `You are already in **${args[0]}** mode, or it is invalid :frowning:`
-      )
-    }
-    bot.createMessage(
-      msg.channel.id,
-      `The bot is currently in **${mode}** mode, type \`${process.env.COMMAND_PREFIX}help\` to learn more`
+    var limit = 30
+    let allMsgs = await msg.channel.getMessages({
+      before: encodeURI(msg.id),
+      limit
+    })
+    let toDelete = allMsgs.filter(m => m.author.id == bot.user.id)
+    bot.tmpResponse(msg, '**Cleaning up my messages :smiley:**', 5000)
+    debug(`deleting ${toDelete.length} of my messages`)
+    bot.deleteMessages(msg.channel.id, toDelete, 'cleaning bot messages')
+    await Promise.all(
+      toDelete.map(m => bot.deleteMessage(msg.channel.id, m.id))
     )
+    bot.tmpResponse(msg, '**Finished cleaning up my messages :smiley:**', 5000)
   },
   {
-    description: 'sets mode to default',
-    fullDescription: "Changes bot's mode back to default"
+    description: 'bot cleaning',
+    fullDescription: 'deletes bots recent messages in channel',
+    deleteCommand: true
   }
 )
 
+// ===== Init Logic =====
+
+// Restore last active mode
+let mode = bot.db.data.config.mode
+botModes.setup(bot, mode)
+bot.on('ready', () => debug('Postie is active'))
+bot.connect()
+
 // Exports the Bot for further use or customization
-module.exports = bot
+export default bot

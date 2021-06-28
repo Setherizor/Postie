@@ -1,19 +1,23 @@
-const low = require('lowdb')
+import { join } from 'path'
+import { Low, JSONFile } from 'lowdb'
 
-const defaultValue = {
-  config: {
-    mode: 'default'
-  },
-  recall: {}
+// Use JSON file for storage
+const file = join('.', 'data', 'db.json')
+const db = new Low(new JSONFile(file))
+
+async function init () {
+  await db.read()
+  // Set default data
+  if (db.data == null) {
+    db.data = {
+      config: {
+        mode: 'default'
+      },
+      recall: {}
+    }
+  }
+  await db.write()
+  return db
 }
 
-// In memory option
-// const Memory = require('lowdb/adapters/Memory')
-// const db = low(new Memory())
-// db.defaults(defaultValue).write()
-
-// Better option that handles concurrency
-const FileAsync = require('lowdb/adapters/FileAsync')
-// Init File with default configs
-const adapter = new FileAsync(process.env.DB_FILE, { defaultValue })
-module.exports = low(adapter)
+export default await init()
