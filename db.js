@@ -13,7 +13,9 @@ async function init () {
       config: {
         mode: 'default'
       },
-      recall: {}
+      guilds: {},
+      recall: {},
+      authTokens: {}
     }
   }
   await db.write()

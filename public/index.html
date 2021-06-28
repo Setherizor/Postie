@@ -1,173 +1,217 @@
 <html>
-  <title>Postie the Bot</title>
-  <link
-    href="https://fonts.googleapis.com/css?family=Lato:100,100i,300,300i,400,400i,700,700i,900,900i"
-    rel="stylesheet"
-  />
+  <head>
+    <title>Postie the Bot</title>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tachyons@4.12.0/css/tachyons.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Lato:100,100i,300,300i,400,400i,700,700i,900,900i"
+      rel="stylesheet"
+    />
+    <link rel="shortcut icon" type="image/png" href="/favicon.ico" />
+    <link rel="stylesheet" href="/styles.css" />
 
-  <link rel="shortcut icon" type="image/png" href="/favicon.ico" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
-  />
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.2.0/dist/cdn.js"
+      defer
+    ></script>
 
-  <style>
-    html,
-    body,
-    .background {
-      margin: 0;
-      width: 100%;
-      min-height: 580px;
-      background: #7289da;
-      text-align: center;
-    }
+    <!-- <script src="https://unpkg.com/nprogress@0.2.0/nprogress.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/nprogress@0.2.0/nprogress.css"
+    /> -->
+  </head>
 
-    @font-face {
-      font-family: Whitney;
-      font-style: light;
-      font-weight: 300;
-      src: url(/assets/16801bfdf51ed88e69bc90626a3ea436.woff) format('woff');
-    }
+  <body class="vh-100 container">
+    <nav
+      x-data
+      class="header bg-discord-dark flex justify-between bb b--white-10 pa2"
+    >
+      <div class="flex items-center link white-70 hover-white no-underline">
+        <svg
+          class="pointer dib h2 w2"
+          data-icon="grid"
+          viewBox="0 0 32 32"
+          style="fill:currentcolor"
+          @click="$store.appState.currentPage = ($store.appState.loggedIn ? 'guildPicker' : 'invite')"
+        >
+          <title>Select Server to Configure</title>
+          <path
+            d="M2 2 L10 2 L10 10 L2 10z M12 2 L20 2 L20 10 L12 10z M22 2 L30 2 L30 10 L22 10z M2 12 L10 12 L10 20 L2 20z M12 12 L20 12 L20 20 L12 20z M22 12 L30 12 L30 20 L22 20z M2 22 L10 22 L10 30 L2 30z M12 22 L20 22 L20 30 L12 30z M22 22 L30 22 L30 30 L22 30z"
+          ></path>
+        </svg>
+        <template
+          x-if="$store.appState.loggedIn && $store.appState.selectedGuild"
+        >
+          <div
+            class="pointer dim"
+            @click="$store.appState.currentPage = 'config'"
+          >
+            <img
+              :src="$store.appState.guildImage"
+              class="dib ml2 v-mid w3 h3 br-100"
+              alt="profile picture"
+            />
+            <div
+              @click="$store.appState.currentPage = 'config'"
+              class="dib ml2 v-mid b white"
+              x-text="$store.appState.selectedGuild.name"
+            ></div>
+          </div>
+        </template>
+      </div>
+      <div class="flex items-center tc">
+        <a
+          class="dib f5 pv2 ph4 b w-auto dib white bg-animate hover-bg-white hover-black no-underline br-pill ba bw2 b--white-50"
+          style="line-height: 41px;"
+          @click="$store.appState.user = null"
+          :href="$store.appState.loggedIn ? '/logout' : '/authurl'"
+          x-text="$store.appState.loggedIn ? 'Logout' : 'Login with Discord'"
+        >
+        </a>
 
-    @font-face {
-      font-family: Whitney;
-      font-style: normal;
-      font-weight: 500;
-      src: url(/assets/d153359b5d87601d2b9c708b7ae2db02.woff) format('woff');
-    }
+        <template x-if="$store.appState.loggedIn">
+          <div class="dib ml2 v-mid mid-gray link dim" href="#">
+            <img
+              :src="$store.appState.avatarUrl"
+              class="dib w3 h3 br-100"
+              alt="profile picture"
+            />
+          </div>
+        </template>
+      </div>
+    </nav>
 
-    @font-face {
-      font-family: Whitney;
-      font-style: medium;
-      font-weight: 600;
-      src: url(/assets/a934ab008c7f6a2274ec441f6be0696a.woff) format('woff');
-    }
-
-    @font-face {
-      font-family: Whitney;
-      font-style: semibold;
-      font-weight: 650;
-      src: url(/assets/877ef48bf9fcfee590f0ba64de101b59.woff) format('woff');
-    }
-
-    @font-face {
-      font-family: Whitney;
-      font-style: bold;
-      font-weight: 700;
-      src: url(/assets/2e004dd717cdc58b9ccb361d286ebbce.woff) format('woff');
-    }
-
-    .discordlogo {
-      background-image: url(/assets/192cb9459cbc0f9e73e2591b700f1857.svg);
-      width: 250px;
-      height: 60px;
-      background-size: 100%;
-      display: inline-block;
-      background-repeat: no-repeat;
-      background-position: 50%;
-      margin-left: -5px;
-      margin-bottom: -22px;
-    }
-
-    .title {
-      font-smooth: auto;
-      padding-top: 80px;
-      font-family: 'Whitney', sans-serif;
-      font-weight: 700;
-      color: #fff;
-      font-size: 40px;
-    }
-
-    .background {
-      background-image: url(/assets/bg3.svg);
-      background-size: 70%;
-      height: calc(100vh - 91px);
-    }
-
-    .step {
-      font-smooth: auto;
-      font-family: 'Whitney', sans-serif;
-      font-weight: 700;
-      color: #fff;
-      font-size: 22px;
-      opacity: 0.8;
-    }
-
-    .link {
-      text-decoration: none;
-      color: #fff;
-      font-family: 'Whitney', sans-serif;
-      font-size: 45px;
-      font-weight: 550;
-      opacity: 0.7;
-      margin-right: auto;
-      margin-left: auto;
-      padding: 15px 50px;
-      border: 2px solid #fff;
-      border-radius: 100px;
-      transition: all 400ms ease;
-    }
-
-    .link:hover {
-      opacity: 1;
-      border: 8px solid #fff;
-    }
-
-    .instructions {
-      font-smooth: auto;
-      font-family: 'Whitney', sans-serif;
-      font-weight: 650;
-      color: rgba(255, 255, 255, 0.65);
-      font-size: 16px;
-    }
-
-    .bottom-wrapper {
-      width: 100%;
-      background: #2c2f33;
-      text-align: center;
-      padding-top: 35px;
-      padding-bottom: 35px;
-      /* position: absolute; */
-      bottom: 0px;
-    }
-
-    .wsite {
-      text-decoration: none;
-      color: #fff;
-      font-family: 'Whitney', sans-serif;
-      font-size: 18px;
-      opacity: 0.5;
-      transition: all 300ms ease;
-    }
-
-    .bottom-wrapper:hover .wsite {
-      opacity: 0.86;
-    }
-  </style>
-
-  <body>
-    <div class="background">
+    <div class="content ma0 w-100 mh-6 tc">
       <div class="title">
-        <div class="discordlogo"></div>
+        <div class="discordlogo w5 h4 dib"></div>
       </div>
-      <br /><br />
-      <div class="title">Postie is anticipating your invite!</div>
-      <div style="height:80px"></div>
 
-      <div class="step">Don't have Postie Yet?</div>
-      <div class="instructions">Just click this link to invite him</div>
-      <div style="height:50px"></div>
+      <div x-data>
+        <template x-if="$store.appState.currentPage == 'invite'">
+          <div>
+            <div class="title white f2 fw7 mb5">
+              Postie is anticipating your invite!
+            </div>
+            <div class="white o-80 f3 fw7">Don't have Postie Yet?</div>
+            <div class="o-60 f4 fw6 mb5">
+              Just click this link to invite him
+            </div>
+            <a
+              class="link grow white fw6 f2 0-70 bw2 ba br-pill pv2 ph4"
+              href="/inviteurl"
+              >Let's Go!</a
+            >
+          </div>
+        </template>
 
-      <a
-        class="link"
-        href="https://discordapp.com/oauth2/authorize?&client_id=363097818979631104&scope=bot&permissions=2146958591"
-        >Let's Go!</a
-      >
+        <template x-if="$store.appState.currentPage == 'guildPicker'">
+          <div class="mw6 center br4 pa3 bg-discord-dark">
+            <template x-for="g in await $store.appState.guilds()">
+              <article class="dt w-100 bb b--white-20 pb2 ph2 mt2">
+                <div class="dtc w2 w3-ns v-mid">
+                  <img
+                    :src="`https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png`"
+                    class="ba b--black-10 db br-100 w2 w3-ns h2 h3-ns"
+                  />
+                </div>
+                <div class="dtc v-mid pl3">
+                  <h1
+                    class="f6 f5-ns fw6 white lh-title mv0"
+                    x-text="g.name"
+                  ></h1>
+                  <h2 class="f6 fw4 mt0 mb0 white-70" x-text="g.id"></h2>
+                </div>
+                <div class="dtc v-mid">
+                  <button
+                    x-data
+                    class="pointer f6 link dim br2 ph3 pv2 mb2 dib bn black f4 bg-white"
+                    @click="$store.appState.selectedGuild = g; $store.appState.currentPage = 'config'"
+                  >
+                    Set Active
+                  </button>
+                </div>
+              </article>
+            </template>
+          </div>
+        </template>
+
+        <template x-if="$store.appState.currentPage == 'config'">
+          <div>
+            YEET
+          </div>
+        </template>
+      </div>
     </div>
-    <a href="https://sethp.cc">
-      <div class="bottom-wrapper">
-        <div class="wsite">Setherizor - 2021</div>
-      </div>
-    </a>
+
+    <div class="footer bg-discord-dark w-100 tc pv4 bottom-0">
+      <a href="https://sethp.cc">
+        <div class="link white">Setherizor - 2021</div>
+      </a>
+    </div>
   </body>
+  <script>
+    // window.addEventListener('pinecone-start', () => NProgress.start())
+    // window.addEventListener('pinecone-end', () => NProgress.done())
+
+    document.addEventListener('alpine:init', () => {
+      Alpine.store('appState', {
+        // Variables
+        currentPage: 'invite',
+        user: null,
+        // Computed properties
+        get loggedIn () {
+          var cookie = document.cookie
+            ? document.cookie
+                .split('; ')
+                .find(row => row.startsWith('isLoggedIn'))
+                .split('=')[1]
+            : false
+
+          if (cookie && !this.user) this.fetchUser()
+          if (cookie && !this.guilds) this.fetchGuilds()
+
+          return cookie
+        },
+        get selectedGuild () {
+          var retrievedObject = localStorage.getItem('guild')
+          return JSON.parse(retrievedObject)
+        },
+        set selectedGuild (g) {
+          localStorage.setItem('guild', JSON.stringify(g))
+        },
+        // https://discord.com/developers/docs/reference#image-formatting
+        get avatarUrl () {
+          return this.user
+            ? `https://cdn.discordapp.com/avatars/${this.user.id}/${
+                this.user.avatar
+              }.png`
+            : '/assets/discordicon.jpeg'
+        },
+
+        get guildImage () {
+          return this.selectedGuild
+            ? `https://cdn.discordapp.com/icons/${this.selectedGuild.id}/${
+                this.selectedGuild.icon
+              }.png`
+            : '/assets/discordicon.jpeg'
+        },
+
+        async fetchUser () {
+          this.user = await (await fetch('/user')).json()
+        },
+
+        async guilds () {
+          return await (await fetch('/guilds')).json()
+        }
+      })
+    })
+  </script>
 </html>

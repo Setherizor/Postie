@@ -1,0 +1,89 @@
+[x-cloak] {
+  display: none;
+}
+
+@font-face {
+  font-family: Whitney;
+  font-style: light;
+  font-weight: 300;
+  src: url(/assets/16801bfdf51ed88e69bc90626a3ea436.woff) format('woff');
+}
+
+@font-face {
+  font-family: Whitney;
+  font-style: normal;
+  font-weight: 500;
+  src: url(/assets/d153359b5d87601d2b9c708b7ae2db02.woff) format('woff');
+}
+
+@font-face {
+  font-family: Whitney;
+  font-style: medium;
+  font-weight: 600;
+  src: url(/assets/a934ab008c7f6a2274ec441f6be0696a.woff) format('woff');
+}
+
+@font-face {
+  font-family: Whitney;
+  font-style: semibold;
+  font-weight: 650;
+  src: url(/assets/877ef48bf9fcfee590f0ba64de101b59.woff) format('woff');
+}
+
+@font-face {
+  font-family: Whitney;
+  font-style: bold;
+  font-weight: 700;
+  src: url(/assets/2e004dd717cdc58b9ccb361d286ebbce.woff) format('woff');
+}
+
+html,
+body {
+  background: #7289da;
+}
+
+* {
+  font-family: 'Whitney', sans-serif;
+  font-smooth: auto;
+}
+
+a {
+  text-decoration: none;
+}
+
+.discordlogo {
+  background-image: url(/assets/192cb9459cbc0f9e73e2591b700f1857.svg);
+  background-size: 100%;
+  background-repeat: no-repeat;
+  background-position: 50%;
+}
+
+.bg-discord-dark {
+  background: #2c2f33;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: min-content 1fr min-content;
+  gap: 0px 0px;
+  grid-auto-flow: row;
+  grid-template-areas:
+    'header header'
+    'content content'
+    'footer footer';
+}
+
+.header {
+  grid-area: header;
+}
+
+.content {
+  grid-area: content;
+  background-image: url(/assets/bg3.svg);
+  background-size: 70%;
+}
+
+.footer {
+  grid-area: footer;
+}
