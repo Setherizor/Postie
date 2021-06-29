@@ -6,6 +6,8 @@ import db from './db.js'
 import Debug from 'debug'
 const debug = Debug('postie:setup')
 
+import { setValue, getValue, toBase64, fromBase64 } from './helpers.js'
+
 let bot = new Eris.CommandClient(
   process.env.DISCORD_BOT_TOKEN,
   {},
@@ -131,12 +133,83 @@ bot.registerCommand(
   }
 )
 
+async function manageRoleFromDB (msg, emoji, reactor, removeRole = false) {
+  if (
+    (removeRole && bot.user.id == reactor) ||
+    (!removeRole && bot.user.id == reactor.id)
+  )
+    return
+
+  await bot.db.read()
+
+  var reactionMessages = getValue(
+    bot.db.data,
+    `guilds.${msg.guildID}.reactionMessages.${msg.id}`
+  )
+  // Have to do this because of how custom emojis work in the API
+  var key = Object.keys(reactionMessages)
+    .map(fromBase64)
+    .find(k => k.startsWith(emoji.name))
+  var roleId = reactionMessages[toBase64(key)]
+
+  if (!roleId) return
+  // https://abal.moe/Eris/docs/CommandClient#event-messageReactionAdd
+  try {
+    if (removeRole) {
+      debug(`removing role: ${roleId} to from ${reactor}`)
+      await bot.removeGuildMemberRole(
+        msg.guildID,
+        reactor,
+        roleId,
+        'reaction role removed'
+      )
+    } else {
+      debug(`adding role: ${roleId} to user ${reactor.id}`)
+      await bot.addGuildMemberRole(
+        msg.guildID,
+        reactor.id,
+        roleId,
+        'reaction role removed'
+      )
+    }
+  } catch (error) {
+    debug('reaction role error: ' + error)
+  }
+}
+
+bot.on('messageReactionAdd', (msg, emoji, reactor) =>
+  manageRoleFromDB(msg, emoji, reactor, false)
+)
+bot.on('messageReactionRemove', (msg, emoji, reactor) =>
+  manageRoleFromDB(msg, emoji, reactor, true)
+)
+bot.on('messageDelete', async msg => {
+  // only run on guild messages
+  if (msg.guildID) {
+    await bot.db.read()
+    var reactionMessages = Object.keys(
+      getValue(bot.db.data, `guilds.${msg.guildID}.reactionMessages`)
+    )
+    if (
+      reactionMessages.length != 0 &&
+      reactionMessages.indexOf(msg.id) != -1
+    ) {
+      debug(`deleting reactionMessage ${msg.id} from guild ${msg.guildID}`)
+      delete bot.db.data.guilds[msg.guildID].reactionMessages[msg.id]
+      await bot.db.write()
+    }
+  }
+})
+
 // ===== Init Logic =====
 
 // Restore last active mode
 let mode = bot.db.data.config.mode
 botModes.setup(bot, mode)
-bot.on('ready', () => debug('Postie is active'))
+bot.on('ready', () => {
+  setupReactionManager()
+  debug('Postie is active')
+})
 
 bot.on('guildCreate', guild => {
   debug(`guild joined: ${guild.name} (${guild.id}) `)

@@ -2,6 +2,20 @@
   display: none;
 }
 
+select {
+  -webkit-appearance: revert !important;
+  /*webkit browsers */
+  -moz-appearance: revert !important;
+  /*Firefox */
+  appearance: revert !important;
+  /* modern browsers */
+  border-radius: 0;
+}
+
+textarea {
+  resize: vertical;
+}
+
 @font-face {
   font-family: Whitney;
   font-style: light;

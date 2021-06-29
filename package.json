@@ -10,11 +10,11 @@
     "url": "https://github.com/Setherizor/Postie"
   },
   "license": "ISC",
-  "exports": "./server.js",
+  "exports": "./website.js",
   "scripts": {
     "format": "npx prettier-standard ./* ./modes/* './public/*'",
-    "start": "DEBUG_DEPTH=10 DEBUG=postie:* PORT=8080 node --trace-warnings -r dotenv-safe/config server.js",
-    "watch": "DEBUG_DEPTH=10 DEBUG=postie:* nodemon -i data/ -r dotenv-safe/config server.js"
+    "start": "DEBUG_DEPTH=10 DEBUG=postie:* PORT=8080 node --trace-warnings -r dotenv-safe/config website.js",
+    "watch": "DEBUG_DEPTH=10 DEBUG=postie:* nodemon -i data/ -r dotenv-safe/config website.js"
   },
   "dependencies": {
     "bufferutil": "^4.0.3",
@@ -28,6 +28,7 @@
     "lowdb": "^2.1.0",
     "request": "^2.88.2",
     "serve-favicon": "^2.5.0",
+    "snowflake-util": "^1.0.1",
     "sodium-native": "^3.2.1",
     "supports-color": "^9.0.1",
     "zlib-sync": "^0.1.7"

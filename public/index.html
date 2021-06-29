@@ -17,6 +17,35 @@
     <link rel="shortcut icon" type="image/png" href="/favicon.ico" />
     <link rel="stylesheet" href="/styles.css" />
 
+    <script type="module">
+      import { EmojiButton } from 'https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.0/dist/index.min.js'
+      // https://emoji-button.js.org/docs
+      window.setupPicker = async function (guildId, callback) {
+        // https://discord.com/developers/docs/reference#image-formatting
+        var emojiObjs = await (await fetch('/emojis/' + guildId)).json()
+        var custom = emojiObjs.map(e => {
+          return {
+            name: e.name,
+            emoji: `https://cdn.discordapp.com/emojis/${e.id}.png`
+          }
+        })
+        window.picker = new EmojiButton({
+          style: 'twemoji',
+          theme: 'dark',
+          showRecents: false,
+          showVariants: false,
+          showAnimation: 'true',
+          initialCategory: 'custom',
+          styleProperties: {
+            '--dark-background-color': '#2c2f33',
+            '--font': 'Whitney, sans-serif'
+          },
+          custom
+        })
+        window.picker.on('emoji', callback)
+      }
+    </script>
+
     <script
       src="https://cdn.jsdelivr.net/npm/alpinejs@3.2.0/dist/cdn.js"
       defer
@@ -52,7 +81,9 @@
         >
           <div
             class="pointer dim"
+            title="Double click to unset"
             @click="$store.appState.currentPage = 'config'"
+            @dblclick.prevent="$store.appState.selectedGuild = false; $store.appState.currentPage = 'invite'"
           >
             <img
               :src="$store.appState.guildImage"
@@ -60,7 +91,6 @@
               alt="profile picture"
             />
             <div
-              @click="$store.appState.currentPage = 'config'"
               class="dib ml2 v-mid b white"
               x-text="$store.appState.selectedGuild.name"
             ></div>
@@ -75,6 +105,7 @@
           :href="$store.appState.loggedIn ? '/logout' : '/authurl'"
           x-text="$store.appState.loggedIn ? 'Logout' : 'Login with Discord'"
         >
+          Loading...
         </a>
 
         <template x-if="$store.appState.loggedIn">
@@ -94,9 +125,12 @@
         <div class="discordlogo w5 h4 dib"></div>
       </div>
 
-      <div x-data>
+      <div
+        x-data
+        x-init="$store.appState.currentPage = $store.appState.selectedGuild && $store.appState.isLoggedIn ? 'config' : 'invite'"
+      >
         <template x-if="$store.appState.currentPage == 'invite'">
-          <div>
+          <article>
             <div class="title white f2 fw7 mb5">
               Postie is anticipating your invite!
             </div>
@@ -109,11 +143,14 @@
               href="/inviteurl"
               >Let's Go!</a
             >
-          </div>
+          </article>
         </template>
 
         <template x-if="$store.appState.currentPage == 'guildPicker'">
-          <div class="mw6 center br4 pa3 bg-discord-dark">
+          <article class="mw6 center br4 pa3 bg-discord-dark">
+            <div class="white pb1 mh0 fw6 f4 bb b--white-20">
+              Select Guild to Configure
+            </div>
             <template x-for="g in await $store.appState.guilds()">
               <article class="dt w-100 bb b--white-20 pb2 ph2 mt2">
                 <div class="dtc w2 w3-ns v-mid">
@@ -140,13 +177,158 @@
                 </div>
               </article>
             </template>
-          </div>
+          </article>
         </template>
 
         <template x-if="$store.appState.currentPage == 'config'">
-          <div>
-            YEET
-          </div>
+          <article class="mw6 center br4 pa4 bg-discord-dark white">
+            <form class="ma0" id="reactionMessageForm">
+              <fieldset id="sign_up" class="ba b--transparent ph0 mh0">
+                <legend class="pb1 mh0 fw6 f4 bb b--white-20">
+                  Manage Reaction Role Messages
+                </legend>
+                <input
+                  type="hidden"
+                  name="guild"
+                  :value="$store.appState.selectedGuild.id"
+                />
+                <div class="mt3">
+                  <label for="channel" class="f6 b db mb2">Text Channel</label>
+                  <select
+                    class="white bg-black pa2 input-reset ba br3 w-100 measure"
+                    type="select-one"
+                    name="channel"
+                    id="channel"
+                    x-data="{channels:[]}"
+                    @mouseover.once="channels = await (await fetch('/channels/'+$store.appState.selectedGuild.id)).json()"
+                  >
+                    <option value="">Please select a channel...</option>
+                    <template x-for="channel in channels">
+                      <option :value="channel.id">
+                        <div
+                          class="mh1 overflow-hidden lh-solid"
+                          style="text-overflow: ellipsis;"
+                          x-text="channel.name"
+                        ></div>
+                      </option>
+                    </template>
+                  </select>
+                </div>
+                <div
+                  x-data="{ len: document.getElementById('message').value.length }"
+                  class="mt3 pb3"
+                >
+                  <label for="message" class="f6 b db mb2">Message</label>
+                  <textarea
+                    class="db tl br3 border-box bg-black white w-100 measure ba b--black-20 pa2 br2 mb2"
+                    id="message"
+                    @input="len = document.getElementById('message').value.length"
+                    name="message"
+                    aria-describedby="message-desc"
+                  >
+React to this message to get your roles!</textarea
+                  >
+                  <small id="message-desc" class="f6"
+                    >What your members will see and react too.
+                    <span
+                      class="hover-blue white o-50 b"
+                      x-text="`(${len}/1800)`"
+                    ></span
+                  ></small>
+                </div>
+                <div class="mt3">
+                  <div class="flex justify-between w-100 mb2">
+                    <label class="dib pv2 fw4 lh-copy f6" for="reaction-roles"
+                      >Reactions & Roles</label
+                    >
+                    <button
+                      class="pointer dim fr br3 ba ph3 pv1 dib bw2 white bg-transparent"
+                      @click.prevent="picker.togglePicker($el)"
+                      @mouseover.once="await setupPicker($store.appState.selectedGuild.id, s => $store.appState.addEmojiSelection($store.appState, s))"
+                    >
+                      Add Reaction
+                    </button>
+                  </div>
+                  <div
+                    class="pv3 ph3 ba b--dashed br3 w-100 measure white-40"
+                    name="reaction-roles"
+                    id="reaction-roles"
+                  >
+                    <template
+                      x-if="$store.appState.emojiSelections.length == 0"
+                    >
+                      <span>
+                        You have not configured any reactions yet
+                      </span>
+                    </template>
+                    <template x-for="emoji in $store.appState.emojiSelections">
+                      <div
+                        class="flex justify-between ba pa2 bg-black w3 h3 mb2 w-100 br3"
+                      >
+                        <template x-if="emoji.url">
+                          <img
+                            :src="emoji.url"
+                            :alt="emoji.emoji + ' ' + emoji.name"
+                            :title="emoji.name"
+                          />
+                        </template>
+                        <template x-if="!emoji.url">
+                          <span
+                            x-html="emoji.emoji + ' ' + emoji.name"
+                            :title="emoji.name"
+                          >
+                          </span>
+                        </template>
+
+                        <select
+                          class="ml3 white bg-black pa2 input-reset ba br3 w-100 measure b"
+                          type="text"
+                          :name="'role%'+emoji.key"
+                          :id="'role%'+emoji.key"
+                          x-data="{roles : [], currentcolor:''}"
+                          :style="'color:'+currentcolor"
+                          @mouseover.once="roles = await (await fetch('/roles/'+$store.appState.selectedGuild.id)).json()"
+                          @click="currentcolor = (roles[$el.value].color == 0 ? 16777215 : roles[$el.value].color).toString(16)"
+                        >
+                          <option value="">choose a role...</option>
+                          <template x-for="role in roles">
+                            <option
+                              :value="role.id"
+                              class="b"
+                              :style="`color:${(role.color == 0 ? 16777215 : role.color).toString(16)};`"
+                            >
+                              <div
+                                class="mh1 overflow-hidden lh-solid"
+                                style="text-overflow: ellipsis;"
+                                x-text="role.name"
+                              ></div>
+                            </option>
+                          </template>
+                        </select>
+                        <img
+                          class="w1 h1 pa3 dim pointer"
+                          style="-webkit-filter: invert(100%); filter: invert(100%);"
+                          src="/assets/close.png"
+                          :alt="'remove ' + emoji.name"
+                          :title="'remove ' + emoji.name"
+                          @click="$store.appState.removeEmojiSelection(emoji.name)"
+                        />
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </fieldset>
+
+              <div class="mt2">
+                <input
+                  class="link w-50 grow pointer hover-bg-white hover-black bg-transparent white fw6 f3 0-70 bw2 ba br-pill pv2 ph3"
+                  type="submit"
+                  @click.prevent="$store.appState.createReactionMessage()"
+                  value="Save"
+                />
+              </div>
+            </form>
+          </article>
         </template>
       </div>
     </div>
@@ -157,16 +339,20 @@
       </a>
     </div>
   </body>
+
   <script>
     // window.addEventListener('pinecone-start', () => NProgress.start())
     // window.addEventListener('pinecone-end', () => NProgress.done())
 
+    // TODO: setup proper permissions for connecting to the ADMIN panel AND running bot COMMANDS
     document.addEventListener('alpine:init', () => {
       Alpine.store('appState', {
-        // Variables
-        currentPage: 'invite',
+        // ======= Variables =======
+        currentPage: 'config',
         user: null,
-        // Computed properties
+        emojiSelections: [],
+        reactionRoles: [],
+        // ======= Computed properties =======
         get loggedIn () {
           var cookie = document.cookie
             ? document.cookie
@@ -203,13 +389,82 @@
               }.png`
             : '/assets/discordicon.jpeg'
         },
-
+        // ======= Logic Handlers =======
+        addEmojiSelection (store, selection) {
+          console.log(selection)
+          // https://abal.moe/Eris/docs/Message#method-addReaction
+          selection.key = btoa(
+            unescape(
+              encodeURIComponent(
+                selection.custom
+                  ? [
+                      selection.name,
+                      selection.url
+                        .split('/')
+                        .pop()
+                        .split('.')
+                        .shift()
+                    ].join(':')
+                  : selection.emoji
+              )
+            )
+          )
+          store.emojiSelections.push(selection)
+        },
+        removeEmojiSelection (emojiName) {
+          this.emojiSelections = this.emojiSelections.filter(
+            x => x.name != emojiName
+          )
+        },
+        // ======= Data Management =======
         async fetchUser () {
           this.user = await (await fetch('/user')).json()
         },
 
         async guilds () {
           return await (await fetch('/guilds')).json()
+        },
+        async createReactionMessage () {
+          if (!this.loggedIn) return alert('You are not logged in!')
+
+          if (!this.selectedGuild) return alert('You have not choosen a guild')
+
+          try {
+            // Package up our selections
+            var form = document.getElementById('reactionMessageForm')
+            var obj = Object.fromEntries(new FormData(form))
+
+            obj.reactionRoles = {}
+
+            Object.keys(obj)
+              .filter(x => x.includes('role%'))
+              .forEach(role => {
+                obj.reactionRoles[role.replace('role%', '')] = obj[role]
+                delete obj[role]
+              })
+
+            if (Object.keys(obj.reactionRoles).length == 0)
+              return alert('You did not configure any reactions')
+
+            // Alert the server
+            var response = await (await fetch('/createReactionMessage', {
+              method: 'POST',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(obj)
+            })).text()
+
+            console.log('message create response: ' + response)
+
+            if (response == 'success') {
+              alert('Roll Reaction Message creation was successful!')
+              window.location.reload() // go back to invite page and clear form
+            }
+          } catch (error) {
+            console.error(error)
+          }
         }
       })
     })

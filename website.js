@@ -7,6 +7,8 @@ import { fileURLToPath } from 'url'
 import Debug from 'debug'
 import db from './db.js'
 import crypto from 'crypto'
+import Snowflake from 'snowflake-util'
+import { setValue, fromBase64 } from './helpers.js'
 
 import bot from './bot.js'
 
@@ -19,12 +21,14 @@ const oauth = new DiscordOauth2({
 })
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+const snowflake = new Snowflake()
 
 const debug = Debug('postie:http')
 const app = express()
 
 // Favicon & Static Files
 app.use(cookieParser())
+app.use(express.json())
 app.use(favicon(join(__dirname, '/public/favicon.ico')))
 
 // Log http requests to the invite site
@@ -35,7 +39,9 @@ function logReq (request, status) {
   debug(ip, ' - ', `"${method} ${url} HTTP/${httpVersion}" ${status}`)
 }
 
+// ==============================
 // ======= Authentication =======
+// ==============================
 
 // https://discord.com/developers/docs/topics/oauth2#oauth2
 app.use(async function (request, response, next) {
@@ -59,8 +65,14 @@ app.use(async function (request, response, next) {
       debug('requesting access_token from discord went wrong: ', error)
     }
 
-    response.cookie('authState', p.state, { maxAge: 900000, httpOnly: true })
-    response.cookie('isLoggedIn', true, { maxAge: 900000, httpOnly: false })
+    response.cookie('authState', p.state, {
+      maxAge: db.data.authTokens[p.state].expires_in * 1000,
+      httpOnly: true
+    })
+    response.cookie('isLoggedIn', true, {
+      maxAge: db.data.authTokens[p.state].expires_in * 1000,
+      httpOnly: false
+    })
     debug('set user cookie')
 
     return response.redirect(request.originalUrl.split('?').shift())
@@ -131,7 +143,9 @@ async function checkTokenExpiry () {
 checkTokenExpiry()
 setInterval(checkTokenExpiry, bufferMiliseconds)
 
+// ==============================
 // ======= Route Handlers =======
+// ==============================
 
 app.get('/authurl', function (request, response) {
   var authUrl = oauth.generateAuthUrl({
@@ -150,6 +164,10 @@ app.get('/inviteurl', function (request, response) {
   })
   response.redirect(authUrl)
 })
+
+// ==============================
+// ===== Data Get Handlers ======
+// ==============================
 
 app.get('/user', async function (request, response) {
   if (request.access_token)
@@ -174,11 +192,112 @@ app.get('/guilds', async function (request, response) {
         }
         return 0
       })
+
     response.send(guilds)
   } else response.send(request.cookies)
 })
 
-// ======= Catchall Handlers =======
+app.get('/roles/:guildId', async function (request, response) {
+  var { guildId } = request.params
+  try {
+    if (guildId) {
+      var roles = bot.guilds.get(guildId).roles
+      response.send(roles)
+      return
+    }
+  } catch (error) {
+    debug('guild roles fetch error: ', error)
+  }
+  response.send([])
+})
+
+app.get('/channels/:guildId', async function (request, response) {
+  var { guildId } = request.params
+  try {
+    if (guildId) {
+      // https://discord.com/developers/docs/resources/channel#channel-object-channel-types
+      var channels = bot.guilds
+        .get(guildId)
+        .channels.filter(c => c.type == 0)
+        .sort((a, b) => {
+          var atime = snowflake.deconstruct(
+            a.lastMessageID ? a.lastMessageID : a.id
+          ).timestamp
+          var btime = snowflake.deconstruct(
+            b.lastMessageID ? b.lastMessageID : a.id
+          ).timestamp
+          if (atime > btime) {
+            return -1
+          }
+          if (atime < btime) {
+            return 1
+          }
+          return 0
+        })
+      response.send(channels)
+      return
+    }
+  } catch (error) {
+    debug('guild channels fetch error: ', error)
+  }
+  response.send([])
+})
+
+app.get('/emojis/:guildId', async function (request, response) {
+  var { guildId } = request.params
+  try {
+    if (guildId) {
+      // https://discord.com/developers/docs/resources/channel#channel-object-channel-types
+      var emojis = bot.guilds.get(guildId).emojis
+      response.send(emojis)
+      return
+    }
+  } catch (error) {
+    debug('guild emojis fetch error: ', error)
+  }
+  response.send([])
+})
+
+// ==============================
+// ===== Data Post Handlers =====
+// ==============================
+
+app.post('/createReactionMessage', async function (request, response) {
+  var config = request.body
+  var guildId = config.guild
+
+  try {
+    if (guildId) {
+      // Create message and react to it
+      var roleMessage = await bot.createMessage(config.channel, config.message)
+      debug('created new reaction roles messagee: ' + roleMessage.id)
+
+      Object.keys(config.reactionRoles).forEach(r =>
+        roleMessage.addReaction(fromBase64(r))
+      )
+
+      // Update DB with the correct data
+      await bot.db.read()
+      setValue(
+        bot.db.data,
+        `guilds.${guildId}.reactionMessages.${roleMessage.id}`,
+        config.reactionRoles
+      )
+      await bot.db.write()
+
+      response.send('success')
+      return
+    }
+  } catch (error) {
+    response.send('error' + error)
+    return
+  }
+  response.send('unfinished')
+})
+
+// ==============================
+// ===== CatchAll Handlers ======
+// ==============================
 
 app.use(express.static(join(__dirname, 'public')))
 
