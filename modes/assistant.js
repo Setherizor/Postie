@@ -83,7 +83,8 @@ function enable (bot) {
     {
       description: 'stores and retrieves urls',
       fullDescription:
-        'Allows you to pass in the url of an image and a meaningful name. Later you can recall the image with this command and the name you specified'
+        'Allows you to pass in the url of an image and a meaningful name. Later you can recall the image with this command and the name you specified',
+      deleteCommand: false
     }
   )
 }
